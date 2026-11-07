@@ -17,7 +17,7 @@ function sectionHTML(s,i){
  const head=`<div class="section-head"><div><div class="eyebrow">${String(i+1).padStart(2,'0')} / ${esc(s.label)}</div><h2>${esc(s.title)}</h2></div>${paragraphs(s.description)}</div>`;
  const items=s.items.map((a,index)=>{
   const image=safeURL(a.image,true), url=safeURL(a.url);
-  const body=`${a.meta?`<div class="eyebrow">${esc(a.meta)}</div>`:''}${a.metric?`<div class="gpa">${esc(a.metric)}</div>`:''}${a.title?`<h3>${esc(a.title)}</h3>`:''}${paragraphs(a.text)}${tags(a.tags)}${url?link({label:'View project',url}):''}`;
+  const body=`${a.meta?`<div class="eyebrow">${esc(a.meta)}</div>`:''}${a.metric?`<div class="gpa">${esc(a.metric)}</div>`:''}${a.title?`<h3>${s.layout==='projects'&&url?`<a class="project-title-link" href="${esc(url)}">${esc(a.title)} <span aria-hidden="true">↗</span></a>`:esc(a.title)}</h3>`:''}${paragraphs(a.text)}${tags(a.tags)}${s.layout!=='projects'&&url?link({label:'View project',url}):''}`;
   if(s.layout==='projects')return `<article class="project"><div class="project-art">${image?`<img class="project-photo" src="${esc(image)}" alt="${esc(a.title)}" loading="lazy">`:`<div class="plate">PROJECT / ${String(index+1).padStart(2,'0')}</div><small>${esc(a.title)}</small>`}</div><div class="project-copy">${body}</div></article>`;
   if(s.layout==='timeline')return `<article class="entry"><div class="date">${esc(a.meta)}</div><div>${a.title?`<h3>${esc(a.title)}</h3>`:''}${paragraphs(a.text)}${tags(a.tags)}${url?link({label:'Learn more',url}):''}</div></article>`;
   return `<article class="${s.layout==='cards'?'award':'text-block'}">${image?`<img class="project-photo" src="${esc(image)}" alt="${esc(a.title)}" loading="lazy">`:''}${body}</article>`;
