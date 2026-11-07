@@ -51,8 +51,8 @@ function render(){
  menu.onclick=()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));};
  nav.querySelectorAll('a').forEach(a=>a.onclick=()=>{nav.classList.remove('open');menu.setAttribute('aria-expanded','false');});
 }
-function serialize(){
- const doc=new DOMParser().parseFromString(template,'text/html');
+function serialize(sourceTemplate=template){
+ const doc=new DOMParser().parseFromString(sourceTemplate,'text/html');
  doc.getElementById('portfolio-data').textContent=JSON.stringify(data).replace(/</g,'\\u003c');
  doc.title=data.name+' | Portfolio';doc.querySelector('meta[name="description"]').content=data.intro;
  return '<!doctype html>\n'+doc.documentElement.outerHTML;
@@ -142,7 +142,7 @@ $('#publish-now').onclick=async()=>{
   const current=await github('GET'), remoteDoc=new DOMParser().parseFromString(decode64(current.content),'text/html'), remoteData=remoteDoc.getElementById('portfolio-data');
   if(!remoteData||JSON.stringify(JSON.parse(remoteData.textContent))!==baseline||Array.from(remoteDoc.querySelectorAll('script,style')).filter(s=>s.id!=='portfolio-data').map(s=>s.textContent).join('')!==Array.from(new DOMParser().parseFromString(template,'text/html').querySelectorAll('script,style')).filter(s=>s.id!=='portfolio-data').map(s=>s.textContent).join(''))throw Error('The live repository has changed. Export a backup, refresh this editor, then restore or reapply your edits to the latest version.');
   message('Saving your changes to GitHub…');
-  await github('PUT',{message:'Update portfolio content from content studio',content:encode64(serialize()),sha:current.sha,branch:'main'});
+  await github('PUT',{message:'Update portfolio content from content studio',content:encode64(serialize(decode64(current.content))),sha:current.sha,branch:'main'});
   baseline=JSON.stringify(data);try{localStorage.removeItem(DRAFT);}catch{}message('Published to GitHub. Your live website will update after GitHub Pages finishes rebuilding (usually a few minutes).');
  }catch(err){message('Not published: '+(err.name==='TimeoutError'?'Request timed out. Check GitHub before retrying; your draft is safe.':err.message));}
  finally{busy=false;$('#publish-now').disabled=false;}
