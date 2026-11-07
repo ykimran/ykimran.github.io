@@ -39,3 +39,12 @@ test('missing OAuth credentials fails closed and shows setup page',async()=>{
  const secret=process.env.AUTH_GITHUB_SECRET;delete process.env.AUTH_GITHUB_SECRET;
  try{assert.equal((await handle(new Request(origin+'/api/content'))).status,503);assert.match(await(await handle(new Request(origin+'/'))).text(),/sign-in is not active yet/);}finally{process.env.AUTH_GITHUB_SECRET=secret;}
 });
+test('GitHub sign-in starts with CSRF, state, and PKCE protection',async()=>{
+ const csrf=await handle(new Request(origin+'/api/auth/csrf'));
+ assert.equal(csrf.status,200);
+ const {csrfToken}=await csrf.json();assert.equal(typeof csrfToken,'string');
+ const cookies=csrf.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
+ const response=await handle(new Request(origin+'/api/auth/signin/github',{method:'POST',headers:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded',Cookie:cookies},body:new URLSearchParams({csrfToken,callbackUrl:origin+'/admin'})}));
+ assert.equal(response.status,302);
+ const target=new URL(response.headers.get('location'));assert.equal(target.origin,'https://github.com');assert.equal(target.pathname,'/login/oauth/authorize');assert.equal(target.searchParams.get('client_id'),'test-client');assert.ok(target.searchParams.get('state'));assert.ok(target.searchParams.get('code_challenge'));assert.equal(target.searchParams.get('code_challenge_method'),'S256');assert.equal(target.searchParams.get('redirect_uri'),origin+'/api/auth/callback/github');
+});
