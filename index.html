@@ -120,11 +120,11 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 #site .plate{position:relative;overflow:hidden}
 #site .plate::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--green);box-shadow:0 0 12px var(--green);animation:plate-scan 3.8s ease-in-out infinite;pointer-events:none}
 @keyframes plate-scan{0%,12%{transform:translateY(-4px);opacity:0}20%{opacity:.8}78%{opacity:.8}90%,100%{transform:translateY(var(--scan-distance,100px));opacity:0}}
-#site .timeline{position:relative;padding-left:26px}
-#site .timeline::before,#site .timeline::after{content:"";position:absolute;left:5px;top:0;bottom:0;width:2px;background:var(--line);pointer-events:none}
-#site .timeline::after{background:var(--green);transform:scaleY(var(--timeline-progress,0));transform-origin:top}
+#site .timeline{--timeline-axis:6px;--timeline-inset:26px;position:relative;padding-left:var(--timeline-inset)}
+#site .timeline::before,#site .timeline::after{content:"";position:absolute;left:var(--timeline-axis);top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--line);pointer-events:none}
+#site .timeline::after{background:var(--green);transform:translateX(-50%) scaleY(var(--timeline-progress,0));transform-origin:top}
 #site .timeline .entry{position:relative}
-#site .timeline .entry::before{content:"";position:absolute;left:-26px;top:31px;width:12px;height:12px;border:2px solid var(--line);background:var(--bg);border-radius:50%;z-index:1;transition:background-color .3s,border-color .3s,box-shadow .3s}
+#site .timeline .entry::before{content:"";position:absolute;box-sizing:border-box;left:calc(var(--timeline-axis) - var(--timeline-inset));top:36.8px;transform:translate(-50%,-50%);width:12px;height:12px;border:2px solid var(--line);background:var(--bg);border-radius:50%;z-index:1;transition:background-color .3s,border-color .3s,box-shadow .3s}
 #site .timeline .entry.is-reached::before{background:var(--green);border-color:var(--green);box-shadow:0 0 12px color-mix(in srgb,var(--green) 40%,transparent)}
 #site .nav-links{position:relative}
 #site .nav-links a[aria-current="location"]{color:var(--green)}
@@ -218,7 +218,7 @@ function setupMotion(){
   }else nav.style.setProperty('--nav-opacity','0');
   const reach=window.innerHeight*.72;
   timelines.forEach(t=>{const rect=t.getBoundingClientRect();t.style.setProperty('--timeline-progress',String(Math.max(0,Math.min(1,(reach-rect.top)/Math.max(1,rect.height)))));
-   t.querySelectorAll('.entry').forEach(e=>e.classList.toggle('is-reached',e.getBoundingClientRect().top+37<=reach));
+   t.querySelectorAll('.entry').forEach(e=>e.classList.toggle('is-reached',e.getBoundingClientRect().top+parseFloat(getComputedStyle(e,'::before').top)<=reach));
   });
   site.querySelectorAll('.plate').forEach(p=>p.style.setProperty('--scan-distance',p.offsetHeight+'px'));
  }
