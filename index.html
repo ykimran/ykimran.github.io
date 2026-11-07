@@ -118,8 +118,6 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 #site .link-arrow,#site .project-title-link span{display:inline-block;transition:transform .22s ease}
 #site a:focus-visible .link-arrow,#site a:focus-visible.project-title-link span{transform:translate(3px,-3px)}
 #site .plate{position:relative;overflow:hidden}
-#site .plate::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--green);box-shadow:0 0 12px var(--green);animation:plate-scan 3.8s ease-in-out infinite;pointer-events:none}
-@keyframes plate-scan{0%,12%{transform:translateY(-4px);opacity:0}20%{opacity:.8}78%{opacity:.8}90%,100%{transform:translateY(var(--scan-distance,100px));opacity:0}}
 #site .timeline{--timeline-axis:6px;--timeline-inset:26px;position:relative;padding-left:var(--timeline-inset)}
 #site .timeline::before,#site .timeline::after{content:"";position:absolute;left:var(--timeline-axis);top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--line);pointer-events:none}
 #site .timeline::after{background:var(--green);transform:translateX(-50%) scaleY(var(--timeline-progress,0));transform-origin:top}
@@ -228,7 +226,6 @@ function setupMotion(){
   timelines.forEach(t=>{const rect=t.getBoundingClientRect();t.style.setProperty('--timeline-progress',String(Math.max(0,Math.min(1,(reach-rect.top)/Math.max(1,rect.height)))));
    t.querySelectorAll('.entry').forEach(e=>e.classList.toggle('is-reached',e.getBoundingClientRect().top+parseFloat(getComputedStyle(e,'::before').top)<=reach));
   });
-  site.querySelectorAll('.plate').forEach(p=>p.style.setProperty('--scan-distance',p.offsetHeight+'px'));
  }
  const schedule=()=>{if(!frame)frame=requestAnimationFrame(update);};
  window.addEventListener('scroll',schedule,options);window.addEventListener('resize',schedule,options);
