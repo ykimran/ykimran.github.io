@@ -1,0 +1,1 @@
+{"name":"ykimran-portfolio-admin","version":"1.0.0","private":true,"type":"module","engines":{"node":"22.x"},"dependencies":{"@auth/core":"0.41.3"},"scripts":{"test":"node --test"}}
