@@ -116,7 +116,7 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 #site .project-art{overflow:hidden}
 #site .project-photo{transition:transform 1.1s ease}
 #site .link-arrow,#site .project-title-link span{display:inline-block;transition:transform .22s ease}
-#site a:focus-visible .link-arrow,#site a:focus-visible.project-title-link span{transform:translate(3px,-3px)}
+
 #site .plate{position:relative;overflow:hidden}
 #site .timeline{--timeline-axis:6px;--timeline-inset:26px;position:relative;padding-left:var(--timeline-inset)}
 #site .timeline::before,#site .timeline::after{content:"";position:absolute;left:var(--timeline-axis);top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--line);pointer-events:none}
@@ -128,7 +128,7 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 #site .nav-links a[aria-current="location"]{color:var(--green)}
 #site .nav-indicator{position:absolute;top:0;left:0;height:2px;background:var(--green);width:var(--nav-width,0px);transform:translate(var(--nav-x,0px),var(--nav-y,0px));opacity:var(--nav-opacity,0);transition:transform .3s ease,width .3s ease,opacity .2s;pointer-events:none}
 #site header,#site .award,#site .project-art,#site .button,#site .tag,#site .plate{transition-property:background-color,color,border-color,transform;transition-duration:.3s}
-@media(hover:hover){#site .project:hover,#site .award:hover{transform:translateY(-4px);border-color:var(--green)}#site .project:hover .project-photo{transform:scale(1.045)}#site a:hover .link-arrow,#site a:hover.project-title-link span{transform:translate(3px,-3px)}}
+@media(hover:hover){#site .project:hover,#site .award:hover{transform:translateY(-4px);border-color:var(--green)}#site .project:hover .project-photo{transform:scale(1.045)}}
 @media(prefers-reduced-motion:reduce){#site *,#site *::before,#site *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}#site .project:hover,#site .award:hover,#site .project:focus-within,#site .award:focus-within,#site .project-photo,#site .link-arrow,#site .project-title-link span{transform:none!important}#site .plate::after{display:none}}
 
 
