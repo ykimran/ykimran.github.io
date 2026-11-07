@@ -130,10 +130,17 @@ const link = (item,cls='button') => safeURL(item.url) ? `<a class="${cls}" href=
 function sectionHTML(s,i){
  const head=`<div class="section-head"><div><div class="eyebrow">${String(i+1).padStart(2,'0')} / ${esc(s.label)}</div><h2>${esc(s.title)}</h2></div>${paragraphs(s.description)}</div>`;
  const items=s.items.map((a,index)=>{
-  const image=safeURL(a.image,true), url=safeURL(a.url);
-  const body=`${a.meta?`<div class="eyebrow">${esc(a.meta)}</div>`:''}${a.metric?`<div class="gpa">${esc(a.metric)}</div>`:''}${a.title?`<h3>${s.layout==='projects'&&url?`<a class="project-title-link" href="${esc(url)}">${esc(a.title)} <span aria-hidden="true">↗</span></a>`:esc(a.title)}</h3>`:''}${paragraphs(a.text)}${tags(a.tags)}${s.layout!=='projects'&&url?link({label:'View project',url}):''}`;
+  const image=safeURL(a.image,true), url=a.showLink===false?'':safeURL(a.url);
+  const titleLink=(a.linkTitle??(s.layout==='projects'))&&Boolean(a.title.trim());
+  const newTab=a.linkNewTab??!titleLink;
+  const target=newTab?' target="_blank" rel="noopener noreferrer"':'';
+  const label=a.linkLabel?.trim()||(s.layout==='timeline'?'Learn more':'View project');
+  const heading=a.title?`<h3>${url&&titleLink?`<a class="project-title-link" href="${esc(url)}"${target}>${esc(a.title)} <span aria-hidden="true">↗</span></a>`:esc(a.title)}</h3>`:'';
+  const action=url&&!titleLink?`<a class="button" href="${esc(url)}"${target}>${esc(label)} ↗</a>`:'';
+  const details=`${a.metric?`<div class="gpa">${esc(a.metric)}</div>`:''}${heading}${paragraphs(a.text)}${tags(a.tags)}${action}`;
+  const body=`${a.meta?`<div class="eyebrow">${esc(a.meta)}</div>`:''}${details}`;
   if(s.layout==='projects')return `<article class="project"><div class="project-art">${image?`<img class="project-photo" src="${esc(image)}" alt="${esc(a.title)}" loading="lazy">`:`<div class="plate">PROJECT / ${String(index+1).padStart(2,'0')}</div><small>${esc(a.title)}</small>`}</div><div class="project-copy">${body}</div></article>`;
-  if(s.layout==='timeline')return `<article class="entry"><div class="date">${esc(a.meta)}</div><div>${a.title?`<h3>${esc(a.title)}</h3>`:''}${paragraphs(a.text)}${tags(a.tags)}${url?link({label:'Learn more',url}):''}</div></article>`;
+  if(s.layout==='timeline')return `<article class="entry"><div class="date">${esc(a.meta)}</div><div>${details}</div></article>`;
   return `<article class="${s.layout==='cards'?'award':'text-block'}">${image?`<img class="project-photo" src="${esc(image)}" alt="${esc(a.title)}" loading="lazy">`:''}${body}</article>`;
  }).join('');
  return `<section id="${esc(s.id)}"><div class="wrap">${head}<div class="${s.layout==='cards'?'awards':s.layout==='timeline'?'timeline':''}">${items}</div></div></section>`;
