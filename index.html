@@ -135,11 +135,11 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 #site .contact-icon{display:inline-block;width:18px;height:18px;flex-shrink:0;vertical-align:-3px;margin-right:8px}
 
 /* Crisp offset highlight inspired by the project-card reference. */
-#site .project{background:var(--bg);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease,background-color .3s ease}
-#site .project:focus-within{box-shadow:12px 12px 0 color-mix(in srgb,var(--green) 22%,transparent)}
-@media(hover:hover){#site .project:hover{box-shadow:12px 12px 0 color-mix(in srgb,var(--green) 22%,transparent)}}
-@media(max-width:760px){#site .project:focus-within{box-shadow:8px 8px 0 color-mix(in srgb,var(--green) 22%,transparent)}}
-@media(max-width:760px) and (hover:hover){#site .project:hover{box-shadow:8px 8px 0 color-mix(in srgb,var(--green) 22%,transparent)}}
+#site .project,#site .award{transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease,background-color .3s ease}
+#site .project:focus-within,#site .award:focus-within{box-shadow:12px 12px 0 color-mix(in srgb,var(--green) 22%,transparent)}
+@media(hover:hover){#site .project:hover,#site .award:hover{box-shadow:12px 12px 0 color-mix(in srgb,var(--green) 22%,transparent)}}
+@media(max-width:760px){#site .project:focus-within,#site .award:focus-within{box-shadow:8px 8px 0 color-mix(in srgb,var(--green) 22%,transparent)}}
+@media(max-width:760px) and (hover:hover){#site .project:hover,#site .award:hover{box-shadow:8px 8px 0 color-mix(in srgb,var(--green) 22%,transparent)}}
 
 </style></head><body>
 <div id="site"></div><div id="editor-root"></div>
