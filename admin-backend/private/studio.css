@@ -120,3 +120,5 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 .studio .studio-tabs{min-height:0}
 @media(max-width:1100px) and (min-width:651px){.studio-layout{grid-template-columns:144px minmax(0,1fr)}}
 @media(max-width:650px){.studio button,.studio .button{min-height:44px}.studio-tabs::before{display:none}.studio-layout{padding:16px}.studio-preview iframe{height:500px}.studio h2{font-size:25px}}
+
+.project-title-link{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:5px}.project-title-link:hover{color:var(--green);text-decoration-color:currentColor}.project-title-link span{font-size:.75em}
