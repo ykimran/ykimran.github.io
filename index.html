@@ -314,6 +314,22 @@ html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{trans
 /* Gently soften only the outer 12px of the project grid. */
 #site .project-art{background:none;isolation:isolate}
 #site .project-art::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:repeating-linear-gradient(0deg, transparent, transparent 28.5px, var(--line) 30px), repeating-linear-gradient(90deg, transparent, transparent 28.5px, var(--line) 30px);-webkit-mask-image:linear-gradient(to right,#0006,#000 12px,#000 calc(100% - 12px),#0006),linear-gradient(to bottom,#0006,#000 12px,#000 calc(100% - 12px),#0006);mask-image:linear-gradient(to right,#0006,#000 12px,#000 calc(100% - 12px),#0006),linear-gradient(to bottom,#0006,#000 12px,#000 calc(100% - 12px),#0006);-webkit-mask-composite:source-in;mask-composite:intersect}
+/* Shared static artwork: one design for projects, one for papers. */
+#site .project-art{padding:0;min-height:300px;background:color-mix(in srgb,var(--green) 3%,var(--bg))}
+#site .project-art::before{background:radial-gradient(ellipse at center,color-mix(in srgb,var(--green) 9%,transparent),transparent 70%);mask:none;-webkit-mask:none}
+#site .shared-art{position:relative;align-self:stretch;width:100%;padding:20px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+#site .shared-art-top{display:flex;align-items:center;justify-content:space-between;gap:20px}
+#site .shared-label{font:10px/1.2 monospace;letter-spacing:2px;color:var(--green);border:1px solid var(--line);padding:8px 12px;border-radius:99px;background:var(--bg)}
+#site .shared-index{font:italic 32px/1 Georgia,serif;color:var(--green);opacity:.6}
+#site .shared-drawing{display:block;width:min(100%,320px);height:190px;margin:auto;stroke:var(--green);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+#site .shared-drawing .solid{fill:var(--bg);stroke-width:1.8}
+#site .shared-drawing .back-sheet{fill:color-mix(in srgb,var(--green) 9%,var(--bg));stroke:var(--line)}
+#site .shared-drawing .tile{fill:color-mix(in srgb,var(--green) 7%,var(--bg))}
+#site .shared-drawing .ink{stroke-width:2.3}
+#site .shared-drawing .faint{opacity:.4}
+#site .shared-drawing .spark{fill:var(--green);stroke:none;opacity:.7}
+#site .shared-art-title{font:10px/1.6 monospace;letter-spacing:.5px;color:var(--muted);max-width:100%}
+@media(max-width:760px){#site .project-art{min-height:280px}#site .shared-art{padding:18px 20px}#site .shared-drawing{height:165px}}
 </style><style>:root[data-palette="charcoal"]{--bg:#000;--ink:#ededed;--muted:#aaa;--line:#303030;--green:#ededed;--card:#080808;--header:rgb(0 0 0 / 96%);--button-ink:#000}
 :root[data-palette="charcoal"][data-theme="light"]{--bg:#f4f3ef;--ink:#282a26;--muted:#65675f;--line:#d3d4cb;--green:#353831;--card:#fcfcf9;--header:rgb(244 243 239 / 94%);--button-ink:#f8f8f4}
 :root[data-palette="charcoal"] #site .theme-toggle{background:#151515;color:#ededed}
@@ -360,6 +376,14 @@ function contactIcon(value){
 }
 
 const link = (item,cls='button') => safeURL(item.url) ? `<a class="${cls}" href="${esc(safeURL(item.url))}" target="_blank" rel="noopener noreferrer">${contactIcon(item.url)}${esc(item.label)} <span class="link-arrow" aria-hidden="true">↗</span></a>` : '';
+function sharedProjectArt(s,a,index){
+ const paper=s.id==='research',n=String(index+1).padStart(2,'0');
+ const drawing=paper?
+ '<g transform="rotate(8 160 110)"><rect class="back-sheet" x="110" y="31" width="116" height="154" rx="9"/></g><g transform="rotate(-5 150 110)"><rect class="solid" x="86" y="25" width="124" height="158" rx="9"/><path class="ink" d="M108 53h44m-44 13h80"/><path class="faint" d="M108 93h80m-80 13h65m-65 13h80m-80 13h70m-70 13h80"/><path d="M108 162h25"/><circle cx="187" cy="161" r="6"/></g><path class="spark" d="m253 72 3-12 3 12 12 3-12 3-3 12-3-12-12-3Z"/><circle class="faint" cx="59" cy="151" r="4"/>':
+ '<g transform="rotate(-6 160 110)"><rect class="back-sheet" x="68" y="36" width="192" height="142" rx="12"/></g><g transform="rotate(3 160 110)"><rect class="solid" x="59" y="28" width="202" height="146" rx="12"/><path class="faint" d="M59 56h202"/><circle cx="73" cy="43" r="2"/><circle cx="83" cy="43" r="2"/><circle cx="93" cy="43" r="2"/><rect class="tile" x="83" y="77" width="54" height="54" rx="10"/><path class="ink" d="m95 105 9 9 20-22"/><path d="M155 84h80m-80 16h62"/><path class="faint" d="M155 122h80m-80 14h45"/><path class="faint" d="M83 151h52"/></g><path class="spark" d="m269 158 3-12 3 12 12 3-12 3-3 12-3-12-12-3Z"/><circle class="faint" cx="43" cy="75" r="4"/>';
+ return '<div class="shared-art '+(paper?'shared-paper':'shared-project')+'"><div class="shared-art-top"><span class="shared-label">'+(paper?'PAPER':'PROJECT')+'</span><span class="shared-index">'+n+'</span></div><svg class="shared-drawing" viewBox="0 0 320 220" fill="none" aria-hidden="true" focusable="false">'+drawing+'</svg><div class="shared-art-title">'+esc(a.title)+'</div></div>';
+}
+
 function sectionHTML(s,i){
  const head=`<div class="section-head"><div><div class="eyebrow">${String(i+1).padStart(2,'0')} / ${esc(s.label)}</div><h2>${esc(s.title)}</h2></div>${paragraphs(s.description)}</div>`;
  const items=s.items.map((a,index)=>{
@@ -372,7 +396,7 @@ function sectionHTML(s,i){
   const action=url&&!titleLink?`<a class="button" href="${esc(url)}"${target}>${esc(label)} <span class="link-arrow" aria-hidden="true">↗</span></a>`:'';
   const details=`${a.metric?`<div class="gpa">${esc(a.metric)}</div>`:''}${heading}${paragraphs(a.text)}${tags(a.tags)}${action}`;
   const body=`${a.meta?`<div class="eyebrow">${esc(a.meta)}</div>`:''}${details}`;
-  if(s.layout==='projects')return `<article class="project"><div class="project-art">${image?`<img class="project-photo" src="${esc(image)}" alt="${esc(a.title)}" loading="lazy">`:`<div class="plate">${s.id==='research'?'PAPER':'PROJECT'} / ${String(index+1).padStart(2,'0')}</div><small>${esc(a.title)}</small>`}</div><div class="project-copy">${body}</div></article>`;
+  if(s.layout==='projects')return `<article class="project"><div class="project-art">${image?`<img class="project-photo" src="${esc(image)}" alt="${esc(a.title)}" loading="lazy">`:sharedProjectArt(s,a,index)}</div><div class="project-copy">${body}</div></article>`;
   if(s.layout==='timeline')return `<article class="entry"><div class="date">${esc(a.meta)}</div><div>${details}</div></article>`;
   return `<article class="${s.layout==='cards'?'award':'text-block'}">${image?`<img class="project-photo" src="${esc(image)}" alt="${esc(a.title)}" loading="lazy">`:''}${body}</article>`;
  }).join('');
