@@ -574,23 +574,14 @@ function setupButtonRipples(signal){
    if(!['touch','pen'].includes(e.pointerType)||e.isPrimary===false)return;
    states.forEach(reset=>reset());
    const origin={clientX:e.clientX,clientY:e.clientY};
-   activeTouch={id:e.pointerId,x:e.clientX,y:e.clientY,scrollX:window.scrollX,scrollY:window.scrollY,button,reset,fadeAfterTouch,start:()=>animateFill(true,origin,true)};
+   activeTouch={id:e.pointerId,x:e.clientX,y:e.clientY,reset,fadeAfterTouch};
+   animateFill(true,origin,true);
   },{passive:true,signal});
  });
  function resetAll(){activeTouch=null;states.forEach(reset=>reset());}
- document.addEventListener('pointerup',e=>{
-  if(activeTouch?.id!==e.pointerId)return;
-  const touch=activeTouch;activeTouch=null;
-  const rect=touch.button.getBoundingClientRect();
-  const moved=Math.hypot(e.clientX-touch.x,e.clientY-touch.y)>10;
-  const scrolled=Math.abs(window.scrollX-touch.scrollX)>2||Math.abs(window.scrollY-touch.scrollY)>2;
-  const inside=e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom;
-  if(moved||scrolled||!inside){touch.reset();return;}
-  touch.start();touch.fadeAfterTouch();
- },{passive:true,signal});
+ document.addEventListener('pointerup',e=>{if(activeTouch?.id===e.pointerId){const touch=activeTouch;activeTouch=null;touch.fadeAfterTouch();}},{passive:true,signal});
  document.addEventListener('pointercancel',e=>{if(activeTouch?.id===e.pointerId){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
  document.addEventListener('pointermove',e=>{if(activeTouch?.id===e.pointerId&&Math.hypot(e.clientX-activeTouch.x,e.clientY-activeTouch.y)>10){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
- window.addEventListener('scroll',()=>{if(activeTouch){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)resetAll();},{signal});
  window.addEventListener('pagehide',resetAll,{signal});window.addEventListener('pageshow',resetAll,{signal});
  desktop.addEventListener('change',resetAll,{signal});
