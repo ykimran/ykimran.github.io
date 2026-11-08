@@ -525,14 +525,14 @@ function applyFonts(){
 function setupButtonRipples(signal){
  const desktop=window.matchMedia('(hover:hover) and (pointer:fine)');
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
- const states=[];let activeTouch=null;
+ const states=[];
  site.querySelectorAll('a.button,button.button').forEach(button=>{
   button.classList.add('ripple-button');
   const label=document.createElement('span');label.className='button-ripple-label';
   while(button.firstChild)label.append(button.firstChild);
   const fill=document.createElement('span');fill.className='button-ripple-fill';fill.setAttribute('aria-hidden','true');
   fill.append(label.cloneNode(true));button.append(label,fill);
-  let animation=null,fadeAnimation=null,fadeTimer=0;
+  let animation=null,fadeAnimation=null,fadeTimer=0,touchCycle=false;
   function animateFill(enter,event,touch=false){
    clearTimeout(fadeTimer);fadeTimer=0;fadeAnimation?.cancel();fadeAnimation=null;fill.style.opacity='1';
    const rect=button.getBoundingClientRect();if(!rect.width||!rect.height)return;
@@ -552,14 +552,14 @@ function setupButtonRipples(signal){
    if(!reduced.matches&&fill.animate){
     const current=fill.animate({clipPath:[from,to]},{duration:touch?(enter?220:260):(enter?440:400),easing:'cubic-bezier(.2,.7,.2,1)'});
     animation=current;
-    current.onfinish=()=>{if(animation===current)animation=null;};
-   }else animation=null;
+    current.onfinish=()=>{if(animation===current){animation=null;if(touch&&enter)fadeAfterTouch();}};
+   }else{animation=null;if(touch&&enter)fadeAfterTouch();}
   }
   button.addEventListener('pointerenter',e=>{if(desktop.matches&&e.pointerType!=='touch'&&e.pointerType!=='pen')animateFill(true,e);},{signal});
   button.addEventListener('pointerleave',e=>{if(desktop.matches&&e.pointerType!=='touch'&&e.pointerType!=='pen'&&!button.matches(':focus-visible'))animateFill(false,e);},{signal});
   button.addEventListener('focus',()=>{if(button.matches(':focus-visible'))animateFill(true);},{signal});
-  button.addEventListener('blur',()=>{if(!button.matches(':hover'))animateFill(false);},{signal});
-  const reset=()=>{clearTimeout(fadeTimer);fadeTimer=0;fadeAnimation?.cancel();fadeAnimation=null;animation?.cancel();animation=null;fill.style.opacity='1';fill.style.clipPath='ellipse(0px 40px at 50% 50%)';};
+  button.addEventListener('blur',()=>{if(!touchCycle&&!button.matches(':hover'))animateFill(false);},{signal});
+  const reset=()=>{touchCycle=false;clearTimeout(fadeTimer);fadeTimer=0;fadeAnimation?.cancel();fadeAnimation=null;animation?.cancel();animation=null;fill.style.opacity='1';fill.style.clipPath='ellipse(0px 40px at 50% 50%)';};
   const fadeAfterTouch=()=>{
    clearTimeout(fadeTimer);
    fadeTimer=setTimeout(()=>{
@@ -567,21 +567,18 @@ function setupButtonRipples(signal){
     if(reduced.matches||!fill.animate){reset();return;}
     fadeAnimation=fill.animate({opacity:[1,0]},{duration:260,easing:'ease-out',fill:'forwards'});
     fadeAnimation.onfinish=reset;
-   },1000);
+   },500);
   };
   states.push(reset);
   button.addEventListener('pointerdown',e=>{
    if(!['touch','pen'].includes(e.pointerType)||e.isPrimary===false)return;
    states.forEach(reset=>reset());
    const origin={clientX:e.clientX,clientY:e.clientY};
-   activeTouch={id:e.pointerId,x:e.clientX,y:e.clientY,reset,fadeAfterTouch};
+   touchCycle=true;
    animateFill(true,origin,true);
   },{passive:true,signal});
  });
- function resetAll(){activeTouch=null;states.forEach(reset=>reset());}
- document.addEventListener('pointerup',e=>{if(activeTouch?.id===e.pointerId){const touch=activeTouch;activeTouch=null;touch.fadeAfterTouch();}},{passive:true,signal});
- document.addEventListener('pointercancel',e=>{if(activeTouch?.id===e.pointerId){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
- document.addEventListener('pointermove',e=>{if(activeTouch?.id===e.pointerId&&Math.hypot(e.clientX-activeTouch.x,e.clientY-activeTouch.y)>10){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
+ function resetAll(){states.forEach(reset=>reset());}
  document.addEventListener('visibilitychange',()=>{if(document.hidden)resetAll();},{signal});
  window.addEventListener('pagehide',resetAll,{signal});window.addEventListener('pageshow',resetAll,{signal});
  desktop.addEventListener('change',resetAll,{signal});
