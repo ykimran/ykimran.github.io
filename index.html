@@ -143,8 +143,8 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 
 
 /* Fill outlined action buttons using the social-button palette. */
-#site a.button:not(.primary):focus-visible{background:var(--green);border-color:var(--green);color:var(--button-ink)}
-@media(hover:hover){#site a.button:not(.primary):hover{background:var(--green);border-color:var(--green);color:var(--button-ink)}}
+#site :is(a,button).button:not(.primary):focus-visible{background:var(--green);border-color:var(--green);color:var(--button-ink)}
+@media(hover:hover){#site :is(a,button).button:not(.primary):hover{background:var(--green);border-color:var(--green);color:var(--button-ink)}}
 
 
 /* Rounded portfolio cards and controls. */
@@ -159,9 +159,9 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 
 /* Align card actions at the bottom, regardless of description length. */
 #site .award{display:flex;flex-direction:column}
-#site .award>a.button{align-self:flex-start;margin-top:auto}
-#site .award>a.button:not(:first-child){margin-top:auto}
-#site .award:has(>a.button){row-gap:8px}
+#site .award>:is(a,button).button{align-self:flex-start;margin-top:auto}
+#site .award>:is(a,button).button:not(:first-child){margin-top:auto}
+#site .award:has(>:is(a,button).button){row-gap:8px}
 
 
 /* Let the contact row gap control spacing consistently when links wrap. */
@@ -244,10 +244,10 @@ html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{trans
 
 
 /* Original-color ripple for mouse, keyboard and touch. */
-#site a.button.ripple-button{position:relative;isolation:isolate;overflow:hidden}
+#site :is(a,button).button.ripple-button{position:relative;isolation:isolate;overflow:hidden}
 #site .button-ripple-label{display:block;pointer-events:none}
 #site .button-ripple-fill{display:block;position:absolute;inset:0;padding:inherit;pointer-events:none;background:var(--green);color:var(--button-ink);clip-path:ellipse(0px 40px at 50% 50%)}
-#site a.button.ripple-button,#site a.button.ripple-button:hover,#site a.button.ripple-button:focus-visible{background:transparent;border-color:var(--green);color:var(--green)}
+#site :is(a,button).button.ripple-button,#site :is(a,button).button.ripple-button:hover,#site :is(a,button).button.ripple-button:focus-visible{background:transparent;border-color:var(--green);color:var(--green)}
 
 /* Animated email-copy confirmation. */
 #site .email-toast{display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.5;min-height:48px}
@@ -394,7 +394,14 @@ function contactIcon(value){
  return path?'<svg class="contact-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="'+path+'"/></svg>':'';
 }
 
-const link = (item,cls='button') => safeURL(item.url) ? `<a class="${cls}" href="${esc(safeURL(item.url))}" target="_blank" rel="noopener noreferrer">${contactIcon(item.url)}${esc(item.label)} <span class="link-arrow" aria-hidden="true">↗</span></a>` : '';
+const link = (item,cls='button') => {
+ const url=safeURL(item.url);if(!url)return '';
+ if(url.startsWith('mailto:')){
+  const address=decodeURIComponent(url.slice(7).split('?')[0]);
+  return `<button type="button" class="${cls}" data-email-copy="${esc(address)}" aria-label="Copy email address">${contactIcon(url)}${esc(item.label)}</button>`;
+ }
+ return `<a class="${cls}" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${contactIcon(url)}${esc(item.label)} <span class="link-arrow" aria-hidden="true">↗</span></a>`;
+};
 function sharedProjectArt(s,a,index){
  const paper=s.id==='research',n=String(index+1).padStart(2,'0');
  const drawing=paper?
@@ -440,7 +447,7 @@ function setupButtonRipples(signal){
  const desktop=window.matchMedia('(hover:hover) and (pointer:fine)');
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
  const states=[];let activeTouch=null;
- site.querySelectorAll('a.button').forEach(button=>{
+ site.querySelectorAll('a.button,button.button').forEach(button=>{
   button.classList.add('ripple-button');
   const label=document.createElement('span');label.className='button-ripple-label';
   while(button.firstChild)label.append(button.firstChild);
@@ -578,10 +585,10 @@ function setupMotion(){
   let copied=false;try{copied=document.execCommand('copy');}finally{input.remove();previous?.focus({preventScroll:true});}return copied;
  }
  site.addEventListener('click',async e=>{
-  const anchor=e.target.closest('a[href^="mailto:"]');
-  if(!anchor||!window.matchMedia('(hover:hover) and (pointer:fine)').matches||e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+  const anchor=e.target.closest('[data-email-copy],a[href^="mailto:"]');
+  if(!anchor||e.button!==0)return;
   e.preventDefault();
-  const address=decodeURIComponent(anchor.getAttribute('href').slice(7).split('?')[0]);
+  const address=anchor.dataset.emailCopy??decodeURIComponent(anchor.getAttribute('href').slice(7).split('?')[0]);
   let copied=false;
   try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(address);copied=true;}}catch{}
   if(!copied){try{copied=fallbackCopyEmail(address);}catch{}}
@@ -702,6 +709,7 @@ if(new URLSearchParams(location.search).has('edit')) location.replace('https://y
  new MutationObserver(updateMeta).observe(root,{attributes:true,attributeFilter:['data-theme']});apply(palette);
 })();
 </script></body></html>
+
 
 
 
