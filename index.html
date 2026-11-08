@@ -230,7 +230,9 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
 /* Reveal the new theme outward from the theme button. */
 html.theme-ripple::view-transition-old(root),html.theme-ripple::view-transition-new(root){animation:none;mix-blend-mode:normal}
 html.theme-ripple::view-transition-old(root){z-index:1}
-html.theme-ripple::view-transition-new(root){z-index:2}
+html.theme-ripple::view-transition-new(root){z-index:2;clip-path:circle(0px at var(--theme-ripple-x) var(--theme-ripple-y))}
+html.theme-ripple::view-transition-group(root){animation:none}
+#site .theme-toggle:disabled{opacity:1;cursor:pointer}
 html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{transition:none!important}
 
 </style></head><body>
@@ -386,6 +388,8 @@ function render(){
   const bounds=toggle.getBoundingClientRect();
   const x=bounds.left+bounds.width/2,y=bounds.top+bounds.height/2;
   const radius=Math.hypot(Math.max(x,window.innerWidth-x),Math.max(y,window.innerHeight-y));
+  root.style.setProperty('--theme-ripple-x',x+'px');
+  root.style.setProperty('--theme-ripple-y',y+'px');
   root.classList.add('theme-ripple');
   const transition=document.startViewTransition(switchTheme);
   try{
@@ -397,7 +401,7 @@ function render(){
    await animation.finished;
   }catch{transition.skipTransition();}
   await transition.finished;
- }finally{root.classList.remove('theme-ripple');toggle.disabled=false;}
+ }finally{root.classList.remove('theme-ripple');root.style.removeProperty('--theme-ripple-x');root.style.removeProperty('--theme-ripple-y');toggle.disabled=false;}
 };
  const menu=site.querySelector('.menu-toggle'), nav=site.querySelector('.links');
  menu.onclick=()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));};
