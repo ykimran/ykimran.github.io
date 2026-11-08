@@ -277,12 +277,18 @@ html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{trans
  #site header .links,#site header .links.open{display:grid;grid-template-rows:0fr;gap:0;width:100%;padding:0;margin:0;border-top:1px solid transparent;opacity:0;visibility:hidden;transition:grid-template-rows 300ms cubic-bezier(.2,.8,.2,1),opacity 220ms ease,visibility 300ms,border-color 220ms ease,margin-top 300ms cubic-bezier(.2,.8,.2,1)}
  #site header .links.open{grid-template-rows:1fr;opacity:1;visibility:visible;border-top-color:var(--line);margin-top:12px}
  #site header .links>.nav-links{min-height:0;overflow:hidden;grid-template-columns:repeat(3,minmax(0,1fr))}
+ #site header .nav-links>a{text-align:left}
  #site .nav-links>a{opacity:0;transform:translateY(-8px);transition:opacity 150ms ease,transform 150ms ease}
  #site .links.open .nav-links>a{opacity:1;transform:translateY(0);transition-duration:240ms;transition-delay:calc(var(--menu-index,0)*24ms)}
 }
 @media(prefers-reduced-motion:reduce){
  #site header,#site header nav,#site header .links,#site .nav-links>a,#site .menu-glyph>span{transition:none!important}
  #site .nav-links>a{transform:none!important}
+}
+
+/* Preserve readable menu labels on narrow phones. */
+@media(max-width:379px){
+ #site header .links>.nav-links{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style></head><body>
 <div id="site"></div><div id="editor-root"></div>
