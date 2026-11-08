@@ -446,8 +446,9 @@ function setupButtonRipples(signal){
   while(button.firstChild)label.append(button.firstChild);
   const fill=document.createElement('span');fill.className='button-ripple-fill';fill.setAttribute('aria-hidden','true');
   fill.append(label.cloneNode(true));button.append(label,fill);
-  let animation=null;
+  let animation=null,fadeAnimation=null,fadeTimer=0;
   function animateFill(enter,event,touch=false){
+   clearTimeout(fadeTimer);fadeTimer=0;fadeAnimation?.cancel();fadeAnimation=null;fill.style.opacity='1';
    const rect=button.getBoundingClientRect();if(!rect.width||!rect.height)return;
    const x=event?Math.max(0,Math.min(rect.width,event.clientX-rect.left)):rect.width/2;
    const y=event?Math.max(0,Math.min(rect.height,event.clientY-rect.top)):rect.height/2;
@@ -472,18 +473,27 @@ function setupButtonRipples(signal){
   button.addEventListener('pointerleave',e=>{if(desktop.matches&&e.pointerType!=='touch'&&e.pointerType!=='pen'&&!button.matches(':focus-visible'))animateFill(false,e);},{signal});
   button.addEventListener('focus',()=>{if(button.matches(':focus-visible'))animateFill(true);},{signal});
   button.addEventListener('blur',()=>{if(!button.matches(':hover'))animateFill(false);},{signal});
-  const reset=()=>{animation?.cancel();animation=null;fill.style.clipPath='ellipse(0px 40px at 50% 50%)';};
+  const reset=()=>{clearTimeout(fadeTimer);fadeTimer=0;fadeAnimation?.cancel();fadeAnimation=null;animation?.cancel();animation=null;fill.style.opacity='1';fill.style.clipPath='ellipse(0px 40px at 50% 50%)';};
+  const fadeAfterTouch=()=>{
+   clearTimeout(fadeTimer);
+   fadeTimer=setTimeout(()=>{
+    fadeTimer=0;
+    if(reduced.matches||!fill.animate){reset();return;}
+    fadeAnimation=fill.animate({opacity:[1,0]},{duration:260,easing:'ease-out',fill:'forwards'});
+    fadeAnimation.onfinish=reset;
+   },1000);
+  };
   states.push(reset);
   button.addEventListener('pointerdown',e=>{
    if(!['touch','pen'].includes(e.pointerType)||e.isPrimary===false)return;
    states.forEach(reset=>reset());
    const origin={clientX:e.clientX,clientY:e.clientY};
-   activeTouch={id:e.pointerId,x:e.clientX,y:e.clientY,reset};
+   activeTouch={id:e.pointerId,x:e.clientX,y:e.clientY,reset,fadeAfterTouch};
    animateFill(true,origin,true);
   },{passive:true,signal});
  });
  function resetAll(){activeTouch=null;states.forEach(reset=>reset());}
- document.addEventListener('pointerup',e=>{if(activeTouch?.id===e.pointerId)activeTouch=null;},{passive:true,signal});
+ document.addEventListener('pointerup',e=>{if(activeTouch?.id===e.pointerId){const touch=activeTouch;activeTouch=null;touch.fadeAfterTouch();}},{passive:true,signal});
  document.addEventListener('pointercancel',e=>{if(activeTouch?.id===e.pointerId){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
  document.addEventListener('pointermove',e=>{if(activeTouch?.id===e.pointerId&&Math.hypot(e.clientX-activeTouch.x,e.clientY-activeTouch.y)>10){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)resetAll();},{signal});
@@ -692,6 +702,7 @@ if(new URLSearchParams(location.search).has('edit')) location.replace('https://y
  new MutationObserver(updateMeta).observe(root,{attributes:true,attributeFilter:['data-theme']});apply(palette);
 })();
 </script></body></html>
+
 
 
 
