@@ -243,17 +243,11 @@ html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{trans
 @media(prefers-reduced-motion:reduce){#site :is(button,a.button),#site :is(button,a.button):active{scale:1;transform:none!important;transition:none!important}}
 
 
-/* Original-color button ripple; touch devices retain solid buttons. */
+/* Original-color ripple for mouse, keyboard and touch. */
 #site a.button.ripple-button{position:relative;isolation:isolate;overflow:hidden}
 #site .button-ripple-label{display:block;pointer-events:none}
-#site .button-ripple-fill{display:none;position:absolute;inset:0;padding:inherit;pointer-events:none;background:var(--green);color:var(--button-ink);clip-path:ellipse(0px 40px at 50% 50%)}
-@media(hover:hover) and (pointer:fine){
- #site a.button.ripple-button,#site a.button.ripple-button:hover,#site a.button.ripple-button:focus-visible{background:transparent;border-color:var(--green);color:var(--green)}
- #site .button-ripple-fill{display:block}
-}
-@media(hover:none),(pointer:coarse){
- #site a.button.ripple-button{background:var(--green);border-color:var(--green);color:var(--button-ink)}
-}
+#site .button-ripple-fill{display:block;position:absolute;inset:0;padding:inherit;pointer-events:none;background:var(--green);color:var(--button-ink);clip-path:ellipse(0px 40px at 50% 50%)}
+#site a.button.ripple-button,#site a.button.ripple-button:hover,#site a.button.ripple-button:focus-visible{background:transparent;border-color:var(--green);color:var(--green)}
 
 /* Animated email-copy confirmation. */
 #site .email-toast{display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.5;min-height:48px}
@@ -430,7 +424,7 @@ function applyFonts(){
 function setupButtonRipples(signal){
  const desktop=window.matchMedia('(hover:hover) and (pointer:fine)');
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
- const states=[];
+ const states=[];let activeTouch=null;
  site.querySelectorAll('a.button').forEach(button=>{
   button.classList.add('ripple-button');
   const label=document.createElement('span');label.className='button-ripple-label';
@@ -438,9 +432,8 @@ function setupButtonRipples(signal){
   const fill=document.createElement('span');fill.className='button-ripple-fill';fill.setAttribute('aria-hidden','true');
   fill.append(label.cloneNode(true));button.append(label,fill);
   let animation=null;
-  function animateFill(enter,event){
-   if(!desktop.matches||event?.pointerType==='touch')return;
-   const rect=button.getBoundingClientRect();
+  function animateFill(enter,event,touch=false){
+   const rect=button.getBoundingClientRect();if(!rect.width||!rect.height)return;
    const x=event?Math.max(0,Math.min(rect.width,event.clientX-rect.left)):rect.width/2;
    const y=event?Math.max(0,Math.min(rect.height,event.clientY-rect.top)):rect.height/2;
    // A broad ellipse collapses along only one axis, avoiding a dot at either end.
@@ -455,20 +448,34 @@ function setupButtonRipples(signal){
    const to=enter?`ellipse(${fullX}px ${fullY}px at ${x}px ${y}px)`:closed;
    fill.style.clipPath=to;
    if(!reduced.matches&&fill.animate){
-    const current=fill.animate({clipPath:[from,to]},{duration:enter?440:400,easing:'cubic-bezier(.2,.7,.2,1)'});
+    const current=fill.animate({clipPath:[from,to]},{duration:touch?(enter?220:260):(enter?440:400),easing:'cubic-bezier(.2,.7,.2,1)'});
     animation=current;
     current.onfinish=()=>{if(animation===current)animation=null;};
    }else animation=null;
   }
-  button.addEventListener('pointerenter',e=>animateFill(true,e),{signal});
-  button.addEventListener('pointerleave',e=>{if(!button.matches(':focus-visible'))animateFill(false,e);},{signal});
+  button.addEventListener('pointerenter',e=>{if(desktop.matches&&e.pointerType!=='touch'&&e.pointerType!=='pen')animateFill(true,e);},{signal});
+  button.addEventListener('pointerleave',e=>{if(desktop.matches&&e.pointerType!=='touch'&&e.pointerType!=='pen'&&!button.matches(':focus-visible'))animateFill(false,e);},{signal});
   button.addEventListener('focus',()=>{if(button.matches(':focus-visible'))animateFill(true);},{signal});
   button.addEventListener('blur',()=>{if(!button.matches(':hover'))animateFill(false);},{signal});
-  states.push(()=>{animation?.cancel();animation=null;fill.style.clipPath='ellipse(0px 40px at 50% 50%)';});
+  const reset=()=>{animation?.cancel();animation=null;fill.style.clipPath='ellipse(0px 40px at 50% 50%)';};
+  states.push(reset);
+  button.addEventListener('pointerdown',e=>{
+   if(!['touch','pen'].includes(e.pointerType)||e.isPrimary===false)return;
+   activeTouch?.reset();
+   const origin={clientX:e.clientX,clientY:e.clientY};
+   activeTouch={id:e.pointerId,x:e.clientX,y:e.clientY,reset,release:()=>animateFill(false,origin,true)};
+   animateFill(true,origin,true);
+  },{passive:true,signal});
  });
- desktop.addEventListener('change',()=>states.forEach(reset=>reset()),{signal});
- reduced.addEventListener('change',()=>{if(reduced.matches)states.forEach(reset=>reset());},{signal});
- signal.addEventListener('abort',()=>states.forEach(reset=>reset()),{once:true});
+ function resetAll(){activeTouch=null;states.forEach(reset=>reset());}
+ document.addEventListener('pointerup',e=>{if(activeTouch?.id===e.pointerId){const touch=activeTouch;activeTouch=null;touch.release();}},{passive:true,signal});
+ document.addEventListener('pointercancel',e=>{if(activeTouch?.id===e.pointerId){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
+ document.addEventListener('pointermove',e=>{if(activeTouch?.id===e.pointerId&&Math.hypot(e.clientX-activeTouch.x,e.clientY-activeTouch.y)>10){activeTouch.reset();activeTouch=null;}},{passive:true,signal});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)resetAll();},{signal});
+ window.addEventListener('pagehide',resetAll,{signal});window.addEventListener('pageshow',resetAll,{signal});
+ desktop.addEventListener('change',resetAll,{signal});
+ reduced.addEventListener('change',()=>{if(reduced.matches)resetAll();},{signal});
+ signal.addEventListener('abort',resetAll,{once:true});
 }
 
 let cleanupMotion=()=>{};
@@ -670,6 +677,7 @@ if(new URLSearchParams(location.search).has('edit')) location.replace('https://y
  new MutationObserver(updateMeta).observe(root,{attributes:true,attributeFilter:['data-theme']});apply(palette);
 })();
 </script></body></html>
+
 
 
 
