@@ -92,13 +92,17 @@ function changed(){
  clearTimeout(previewTimer);previewTimer=setTimeout(updatePreview,300);
 }
 function updatePreview(){render();$('#live-preview').srcdoc=serialize();}
+function itemOrderControls(section,sectionIndex,item,itemIndex){
+ const name=item.title?.trim()||'Item '+(itemIndex+1);
+ return `<div class="studio-actions" role="group" aria-label="Reorder ${esc(name)}"><button type="button" data-move-item="${sectionIndex},${itemIndex},-1" aria-label="Move ${esc(name)} up" ${itemIndex===0?'disabled':''}>↑ Move up</button><button type="button" data-move-item="${sectionIndex},${itemIndex},1" aria-label="Move ${esc(name)} down" ${itemIndex===section.items.length-1?'disabled':''}>↓ Move down</button><span class="help">${itemIndex+1} of ${section.items.length}</span></div>`;
+}
 function showFields(){
  const openKeys=new Set(Array.from(fields.querySelectorAll("details[open][data-key]")).map(d=>d.dataset.key));
  editor.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.tab===tab)));
  if(tab==='profile')fields.innerHTML=`<h2>Make it yours.</h2><p>Your introduction, photo, and the first impression.</p><div class="studio-panel">${field('Full name','name',data.name)}${field('Field / headline','eyebrow',data.eyebrow)}${field('Introduction','intro',data.intro,'textarea')}${photoField('photo',data.photo,'profile photo')}${field('Tagline','tagline',data.tagline)}${field('Education summary','education',data.education)}</div>`;
  if(tab==='typography')fields.innerHTML=`<h2>Find your type.</h2><p>Choose your fonts and see them in the live preview before publishing.</p><div class="studio-panel"><label for="body-font">Body text & navigation</label><select id="body-font" data-path="bodyFont">${fontChoices.map(f=>`<option ${data.bodyFont===f?'selected':''}>${f}</option>`).join('')}</select><label for="heading-font">Headings</label><select id="heading-font" data-path="headingFont">${[...fontChoices,'Georgia'].map(f=>`<option ${data.headingFont===f?'selected':''}>${f}</option>`).join('')}</select><p class="help">Plus Jakarta Sans: modern and geometric.<br>Manrope: clean and polished.<br>DM Sans: soft and understated.<br>Inter: crisp and practical.<br>System: your device's default font.<br>Georgia: classic serif headings.</p></div>`;
  if(tab==='connect')fields.innerHTML=`<h2>Connect with me.</h2><p>Add LinkedIn, email, GitHub, or any other contact link.</p><div class="studio-panel">${field('Section heading','contactTitle',data.contactTitle)}${field('Contact introduction','contactText',data.contactText,'textarea')}${data.links.map((l,i)=>`<div class="item-card">${field('Button label',`links.${i}.label`,l.label)}${field('URL (https://, mailto:, or tel:)',`links.${i}.url`,l.url,'url')}<button class="danger" data-remove-link="${i}">Remove link</button></div>`).join('')}<button data-add-link>+ Add contact link</button></div>`;
- if(tab==='sections')fields.innerHTML=`<h2>Shape your story.</h2><p>Edit existing sections, add projects, and arrange your page.</p>${data.sections.map((s,i)=>`<details data-key="${esc(s.id)}" class="studio-panel" ${i===0?'open':''}><summary>${esc(s.label||'Untitled section')} · ${s.items.length} item${s.items.length===1?'':'s'}</summary><div class="studio-actions"><button data-move="${i},-1" ${i===0?'disabled':''}>↑ Move up</button><button data-move="${i},1" ${i===data.sections.length-1?'disabled':''}>↓ Move down</button><button class="danger" data-remove-section="${i}">Remove section</button></div><label class="check-label"><input type="checkbox" data-path="sections.${i}.visible" ${s.visible?'checked':''}> Show on website</label><div class="pair">${field('Navigation label',`sections.${i}.label`,s.label)}${field('Section heading',`sections.${i}.title`,s.title)}</div>${field('Introduction',`sections.${i}.description`,s.description,'textarea')}<label for="layout-${i}">Layout</label><select id="layout-${i}" data-path="sections.${i}.layout">${['text','projects','timeline','cards'].map(l=>`<option value="${l}" ${s.layout===l?'selected':''}>${{text:'Text',projects:'Projects with images',timeline:'Timeline',cards:'Cards'}[l]}</option>`).join('')}</select>${s.items.map((a,j)=>`<details class="item-card"><summary>${esc(a.title||'Text block '+(j+1))}</summary><div class="pair">${field('Title',`sections.${i}.items.${j}.title`,a.title)}${field('Date / subtitle',`sections.${i}.items.${j}.meta`,a.meta)}</div>${field('Description',`sections.${i}.items.${j}.text`,a.text,'textarea')}<div class="pair">${field('Tags (separate with commas)',`sections.${i}.items.${j}.tags`,a.tags)}${field('Highlight / GPA (optional)',`sections.${i}.items.${j}.metric`,a.metric||'')}</div>${itemLinkFields(a,s,`sections.${i}.items.${j}`)}${photoField(`sections.${i}.items.${j}.image`,a.image||'','item image')}<button class="danger" data-remove-item="${i},${j}">Remove item</button></details>`).join('')}<button data-add-item="${i}">+ Add ${s.layout==='projects'?'project':'item'}</button></details>`).join('')}<button class="primary" data-add-section>+ Add new section</button>`;
+ if(tab==='sections')fields.innerHTML=`<h2>Shape your story.</h2><p>Edit sections and reorder projects, papers, or other items with Move up and Move down. Publish changes to apply the order to your website.</p>${data.sections.map((s,i)=>`<details data-key="${esc(s.id)}" class="studio-panel" ${i===0?'open':''}><summary>${esc(s.label||'Untitled section')} · ${s.items.length} item${s.items.length===1?'':'s'}</summary><div class="studio-actions"><button data-move="${i},-1" ${i===0?'disabled':''}>↑ Move up</button><button data-move="${i},1" ${i===data.sections.length-1?'disabled':''}>↓ Move down</button><button class="danger" data-remove-section="${i}">Remove section</button></div><label class="check-label"><input type="checkbox" data-path="sections.${i}.visible" ${s.visible?'checked':''}> Show on website</label><div class="pair">${field('Navigation label',`sections.${i}.label`,s.label)}${field('Section heading',`sections.${i}.title`,s.title)}</div>${field('Introduction',`sections.${i}.description`,s.description,'textarea')}<label for="layout-${i}">Layout</label><select id="layout-${i}" data-path="sections.${i}.layout">${['text','projects','timeline','cards'].map(l=>`<option value="${l}" ${s.layout===l?'selected':''}>${{text:'Text',projects:'Projects with images',timeline:'Timeline',cards:'Cards'}[l]}</option>`).join('')}</select>${s.items.map((a,j)=>`<details class="item-card" data-item-location="${i},${j}"><summary>${esc(a.title||'Text block '+(j+1))}</summary>${itemOrderControls(s,i,a,j)}<div class="pair">${field('Title',`sections.${i}.items.${j}.title`,a.title)}${field('Date / subtitle',`sections.${i}.items.${j}.meta`,a.meta)}</div>${field('Description',`sections.${i}.items.${j}.text`,a.text,'textarea')}<div class="pair">${field('Tags (separate with commas)',`sections.${i}.items.${j}.tags`,a.tags)}${field('Highlight / GPA (optional)',`sections.${i}.items.${j}.metric`,a.metric||'')}</div>${itemLinkFields(a,s,`sections.${i}.items.${j}`)}${photoField(`sections.${i}.items.${j}.image`,a.image||'','item image')}<button class="danger" data-remove-item="${i},${j}">Remove item</button></details>`).join('')}<button data-add-item="${i}">+ Add ${s.layout==='projects'?'project':'item'}</button></details>`).join('')}<button class="primary" data-add-section>+ Add new section</button>`;
  if(tab==='drafts')fields.innerHTML=`<h2>Your work, saved.</h2><p>Drafts stay on this device. Export a backup to move between devices.</p><div class="studio-panel"><h3>Local draft</h3><p>A saved draft is never loaded over the live site automatically. Restore it here when you want to continue editing.</p><div class="studio-actions"><button id="restore-draft">Restore saved draft</button><button id="discard-draft" class="danger">Discard draft & reset</button></div></div><div class="studio-panel"><h3>Backup & restore</h3><button id="backup-json">Download content backup</button><label for="import-json">Restore a content backup (.json)</label><input id="import-json" type="file" accept="application/json,.json"><p class="help">Restoring changes only this draft until you publish.</p></div>`;
  fields.querySelectorAll('details[data-key]').forEach(d=>{if(openKeys.has(d.dataset.key))d.open=true;});
 }
@@ -121,13 +125,20 @@ function validate(d, allowIncomplete=false){
  if(JSON.stringify(d).length>700000)throw Error('Content is too large. Use image URLs or remove some uploaded images.');
 }
 fields.addEventListener('click',e=>{
- const b=e.target.closest('button');if(!b)return;
+ const b=e.target.closest('button');if(!b||b.disabled)return;
+ let movedItem=null;
  if(b.dataset.clear){setPath(b.dataset.clear,'');}
  else if('addLink'in b.dataset)data.links.push({label:'New link',url:''});
  else if('removeLink'in b.dataset){if(!confirm('Remove this contact link?'))return;data.links.splice(+b.dataset.removeLink,1);}
  else if('addSection'in b.dataset){data.sections.push({id:'section-'+Date.now().toString(36),label:'New section',title:'New section',description:'',layout:'cards',visible:true,items:[]});}
  else if('removeSection'in b.dataset){if(!confirm('Remove this section and its items?'))return;data.sections.splice(+b.dataset.removeSection,1);}
  else if('move'in b.dataset){const [i,delta]=b.dataset.move.split(',').map(Number);if(i+delta<0||i+delta>=data.sections.length)return;[data.sections[i],data.sections[i+delta]]=[data.sections[i+delta],data.sections[i]];}
+ else if('moveItem'in b.dataset){
+  const [i,j,delta]=b.dataset.moveItem.split(',').map(Number);
+  const items=data.sections[i]?.items,to=j+delta;
+  if(!Number.isInteger(i)||!Number.isInteger(j)||![-1,1].includes(delta)||!items||j<0||j>=items.length||to<0||to>=items.length)return;
+  items.splice(to,0,items.splice(j,1)[0]);movedItem={section:i,index:to,delta};
+ }
  else if('addItem'in b.dataset){data.sections[+b.dataset.addItem].items.push({title:'New item',text:'',meta:'',tags:'',url:'',image:'',metric:''});}
  else if('removeItem'in b.dataset){if(!confirm('Remove this item?'))return;const [i,j]=b.dataset.removeItem.split(',').map(Number);data.sections[i].items.splice(j,1);}
  else if(b.id==='restore-draft'){try{const saved=JSON.parse(localStorage.getItem(DRAFT)||'null');if(!saved)throw Error('No saved draft on this device.');validate(saved.data,true);if(!confirm('Restore the saved draft?'))return;data=saved.data;message(saved.baseline===baseline?'Draft restored.':'Draft restored from an older version. Review it against the current website before publishing.');updatePreview();showFields();}catch(err){message(err.message);}return;}
@@ -135,6 +146,16 @@ fields.addEventListener('click',e=>{
  else if(b.id==='backup-json'){download('portfolio-backup.json',JSON.stringify(data,null,2),'application/json');return;}
  else return;
  changed();showFields();
+ if(movedItem){
+  const {section,index,delta}=movedItem;
+  const item=fields.querySelector(`details[data-item-location="${section},${index}"]`);
+  if(item){
+   item.open=true;const parent=item.closest('details[data-key]');if(parent)parent.open=true;
+   const sameDirection=item.querySelector(`button[data-move-item="${section},${index},${delta}"]`);
+   const nextFocus=sameDirection&&!sameDirection.disabled?sameDirection:item.querySelector('button[data-move-item]:not(:disabled)')||item.querySelector('summary');
+   nextFocus?.focus({preventScroll:true});
+  }
+ }
 });
 editor.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;showFields();});
 function download(name,content,type='text/html'){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -171,3 +192,4 @@ const studioBarObserver=new ResizeObserver(()=>studio.style.setProperty('--studi
 showFields();updatePreview();
 try{if(localStorage.getItem(DRAFT))message('A saved draft is available. Open Drafts & backup to restore it.');}catch{}
 })();
+
