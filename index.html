@@ -246,7 +246,7 @@ html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{trans
 /* Original-color button ripple; touch devices retain solid buttons. */
 #site a.button.ripple-button{position:relative;isolation:isolate;overflow:hidden}
 #site .button-ripple-label{display:block;pointer-events:none}
-#site .button-ripple-fill{display:none;position:absolute;inset:0;padding:inherit;pointer-events:none;background:var(--green);color:var(--button-ink);clip-path:circle(0px at 50% 50%)}
+#site .button-ripple-fill{display:none;position:absolute;inset:0;padding:inherit;pointer-events:none;background:var(--green);color:var(--button-ink);clip-path:ellipse(0px 40px at 50% 50%)}
 @media(hover:hover) and (pointer:fine){
  #site a.button.ripple-button,#site a.button.ripple-button:hover,#site a.button.ripple-button:focus-visible{background:transparent;border-color:var(--green);color:var(--green)}
  #site .button-ripple-fill{display:block}
@@ -336,14 +336,19 @@ function setupButtonRipples(signal){
    const rect=button.getBoundingClientRect();
    const x=event?Math.max(0,Math.min(rect.width,event.clientX-rect.left)):rect.width/2;
    const y=event?Math.max(0,Math.min(rect.height,event.clientY-rect.top)):rect.height/2;
-   const radius=Math.hypot(Math.max(x,rect.width-x),Math.max(y,rect.height-y))+2;
+   // A broad ellipse collapses along only one axis, avoiding a dot at either end.
+   const dx=Math.max(x,rect.width-x),dy=Math.max(y,rect.height-y);
+   const verticalEdge=Math.min(x,rect.width-x)/rect.width<Math.min(y,rect.height-y)/rect.height;
+   const fullX=Math.max(rect.width*.7,dx*Math.SQRT2)+3;
+   const fullY=Math.max(rect.height*.9,dy*Math.SQRT2)+3;
+   const closed=`ellipse(${verticalEdge?0:fullX}px ${verticalEdge?fullY:0}px at ${x}px ${y}px)`;
    let from=getComputedStyle(fill).clipPath;
-   if(enter&&!animation&&from.startsWith('circle(0px'))from=`circle(0px at ${x}px ${y}px)`;
+   if(enter&&!animation)from=closed;
    animation?.cancel();
-   const to=`circle(${enter?radius:0}px at ${x}px ${y}px)`;
+   const to=enter?`ellipse(${fullX}px ${fullY}px at ${x}px ${y}px)`:closed;
    fill.style.clipPath=to;
    if(!reduced.matches&&fill.animate){
-    const current=fill.animate({clipPath:[from,to]},{duration:enter?440:360,easing:'cubic-bezier(.2,.7,.2,1)'});
+    const current=fill.animate({clipPath:[from,to]},{duration:enter?440:400,easing:'cubic-bezier(.2,.7,.2,1)'});
     animation=current;
     current.onfinish=()=>{if(animation===current)animation=null;};
    }else animation=null;
@@ -352,7 +357,7 @@ function setupButtonRipples(signal){
   button.addEventListener('pointerleave',e=>{if(!button.matches(':focus-visible'))animateFill(false,e);},{signal});
   button.addEventListener('focus',()=>{if(button.matches(':focus-visible'))animateFill(true);},{signal});
   button.addEventListener('blur',()=>{if(!button.matches(':hover'))animateFill(false);},{signal});
-  states.push(()=>{animation?.cancel();animation=null;fill.style.clipPath='circle(0px at 50% 50%)';});
+  states.push(()=>{animation?.cancel();animation=null;fill.style.clipPath='ellipse(0px 40px at 50% 50%)';});
  });
  desktop.addEventListener('change',()=>states.forEach(reset=>reset()),{signal});
  reduced.addEventListener('change',()=>{if(reduced.matches)states.forEach(reset=>reset());},{signal});
@@ -511,3 +516,4 @@ if(new URLSearchParams(location.search).has('edit')) location.replace('https://y
 })();</script>
 
 </body></html>
+
