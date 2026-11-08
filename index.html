@@ -567,7 +567,7 @@ function setupButtonRipples(signal){
     if(reduced.matches||!fill.animate){reset();return;}
     fadeAnimation=fill.animate({opacity:[1,0]},{duration:260,easing:'ease-out',fill:'forwards'});
     fadeAnimation.onfinish=reset;
-   },500);
+   },button.matches('[data-email-copy],a[href^="mailto:"]')?1000:500);
   };
   states.push(reset);
   button.addEventListener('pointerdown',e=>{
