@@ -3,10 +3,27 @@
   "name": "portfolio-admin",
   "main": "cloudflare/worker.js",
   "compatibility_date": "2026-11-11",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "workers_dev": true,
   "preview_urls": false,
-  "build": { "command": "node cloudflare/build.mjs" },
-  "rules": [{ "type": "Text", "globs": ["**/generated/*.txt"], "fallthrough": true }],
-  "observability": { "enabled": false }
+  "build": {
+    "command": "node cloudflare/build.mjs"
+  },
+  "rules": [
+    {
+      "type": "Text",
+      "globs": [
+        "**/generated/*.txt"
+      ],
+      "fallthrough": true
+    }
+  ],
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "APP_ORIGIN": "https://portfolio-admin.ykimran.workers.dev"
+  }
 }
