@@ -7,10 +7,10 @@ const REPO='ykimran/ykimran.github.io';
 const OWNER_ID='85554274';
 const CONTENT_URL=`https://api.github.com/repos/${REPO}/contents/index.html`;
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export const configured=()=>Boolean(process.env.AUTH_SECRET&&process.env.AUTH_GITHUB_ID&&process.env.AUTH_GITHUB_SECRET&&process.env.APP_ORIGIN);
-export function config(){return {
- secret:process.env.AUTH_SECRET,trustHost:true,basePath:'/api/auth',useSecureCookies:true,
- providers:[GitHub({clientId:process.env.AUTH_GITHUB_ID,clientSecret:process.env.AUTH_GITHUB_SECRET,checks:['pkce','state'],authorization:{params:{scope:'read:user public_repo'}}})],
+export const configured=(env=process.env)=>Boolean(env.AUTH_SECRET&&env.AUTH_GITHUB_ID&&env.AUTH_GITHUB_SECRET&&env.APP_ORIGIN);
+export function config(env=process.env){return {
+ secret:env.AUTH_SECRET,trustHost:true,basePath:'/api/auth',useSecureCookies:true,
+ providers:[GitHub({clientId:env.AUTH_GITHUB_ID,clientSecret:env.AUTH_GITHUB_SECRET,checks:['pkce','state'],authorization:{params:{scope:'read:user public_repo'}}})],
  session:{strategy:'jwt',maxAge:4*60*60},
  callbacks:{
   async signIn({profile}){return String(profile?.id)===OWNER_ID;},
@@ -20,11 +20,11 @@ export function config(){return {
  },
  logger:{error(error){console.error('Authentication error:',error.type||'unknown');}}
 };}
-export async function session(request){
- if(!configured())return null;
+export async function session(request,env=process.env){
+ if(!configured(env))return null;
  // Accept only the encrypted HttpOnly cookie; do not accept arbitrary bearer tokens.
  const headers=new Headers();if(request.headers.get('cookie'))headers.set('cookie',request.headers.get('cookie'));
- const token=await getToken({req:{headers},secret:process.env.AUTH_SECRET,secureCookie:true});
+ const token=await getToken({req:{headers},secret:env.AUTH_SECRET,secureCookie:true});
  return token?.githubId===OWNER_ID&&typeof token.githubToken==='string'&&token.githubToken?token:null;
 }
 export async function githubContent(token,method='GET',body){
@@ -35,29 +35,28 @@ export async function githubContent(token,method='GET',body){
 function page(title,body){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} · Portfolio Studio</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"><style>body{margin:0;background:#0b1115;color:#edf2ed;font:16px/1.8 'Plus Jakarta Sans',sans-serif;min-height:100svh;display:grid;place-items:center}main{width:min(560px,calc(100% - 44px));padding:48px 0}small{color:#bce5aa;letter-spacing:3px;font-size:11px}h1{font-size:clamp(38px,9vw,60px);line-height:1.1;letter-spacing:-.05em;font-weight:600}p{color:#a4b5aa}a,button{display:inline-block;background:#bce5aa;color:#142116;border:0;border-radius:10px;padding:14px 22px;text-decoration:none;font:600 14px 'Plus Jakarta Sans',sans-serif}code{overflow-wrap:anywhere;color:#bce5aa}li{margin-bottom:10px}.secondary{background:none;color:#bce5aa;padding-left:0}</style></head><body><main><small>YK / PRIVATE CONTENT STUDIO</small>${body}</main></body></html>`;}
 function reply(body,status=200,type='text/html; charset=utf-8'){return new Response(body,{status,headers:{'Content-Type':type,'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY','Content-Security-Policy':"frame-ancestors 'none'; base-uri 'self'; object-src 'none'"}});}
 const json=(value,status=200)=>reply(JSON.stringify(value),status,'application/json; charset=utf-8');
-export async function handle(request){
+export async function handle(request,{env=process.env,loadStudio}={}){
  const url=new URL(request.url),path=url.pathname;
  if(!['GET','POST','PUT'].includes(request.method))return json({error:'Method not allowed'},405);
- if(path==='/health')return json({ok:true,configured:configured()});
+ if(path==='/health')return json({ok:true,configured:configured(env)});
  if(path==='/'||path==='/login'){
-  const body=configured()?`<h1>Your next chapter starts here.</h1><p>Sign in with GitHub to update your portfolio. Only the owner account, <strong>ykimran</strong>, can access the editor.</p><a href="/api/auth/signin?callbackUrl=%2Fadmin">Sign in with GitHub ↗</a><p><a class="secondary" href="https://ykimran.github.io/">Back to portfolio</a></p>`:`<h1>Your studio is ready for setup.</h1><p>GitHub sign-in is not active yet. The owner needs to register an OAuth app and configure its credentials in Vercel.</p><p>Homepage URL:<br><code>${escapeHTML(process.env.APP_ORIGIN||url.origin)}</code></p><p>Authorization callback URL:<br><code>${escapeHTML(process.env.APP_ORIGIN||url.origin)}/api/auth/callback/github</code></p><p>Store the client ID as <code>AUTH_GITHUB_ID</code> and the client secret as <code>AUTH_GITHUB_SECRET</code> in Vercel’s Production environment, then redeploy.</p><a class="secondary" href="https://ykimran.github.io/">Back to portfolio</a>`;
+  const body=configured(env)?`<h1>Your next chapter starts here.</h1><p>Sign in with GitHub to update your portfolio. Only the owner account, <strong>ykimran</strong>, can access the editor.</p><a href="/api/auth/signin?callbackUrl=%2Fadmin">Sign in with GitHub ↗</a><p><a class="secondary" href="https://ykimran.github.io/">Back to portfolio</a></p>`:`<h1>Your studio is ready for setup.</h1><p>GitHub sign-in is not active yet. The owner needs to register an OAuth app and configure its credentials on the dashboard host.</p><p>Homepage URL:<br><code>${escapeHTML(env.APP_ORIGIN||url.origin)}</code></p><p>Authorization callback URL:<br><code>${escapeHTML(env.APP_ORIGIN||url.origin)}/api/auth/callback/github</code></p><p>Store the client ID as <code>AUTH_GITHUB_ID</code> and the client secret as <code>AUTH_GITHUB_SECRET</code> as encrypted secrets on the dashboard host, then redeploy.</p><a class="secondary" href="https://ykimran.github.io/">Back to portfolio</a>`;
   return reply(page('Sign in',body));
  }
- if(!configured())return path==='/admin'?Response.redirect(new URL('/',url),303):json({error:'GitHub sign-in requires owner setup.'},503);
- const allowedOrigin=new URL(process.env.APP_ORIGIN).origin;
+ if(!configured(env))return path==='/admin'?Response.redirect(new URL('/',url),303):json({error:'GitHub sign-in requires owner setup.'},503);
+ const allowedOrigin=new URL(env.APP_ORIGIN).origin;
  if(url.origin!==allowedOrigin)return json({error:'Use the production dashboard address.'},400);
  if(path.startsWith('/api/auth/')){
-  const response=await Auth(request,config());
+  const response=await Auth(request,config(env));
   response.headers.set('Cache-Control','no-store, private');return response;
  }
  if(path!=='/admin'&&path!=='/api/content')return json({error:'Not found'},404);
- const token=await session(request);
+ const token=await session(request,env);
  if(!token)return path==='/admin'?Response.redirect(new URL('/',url),303):json({error:'Sign in with the owner GitHub account.'},401);
  if(path==='/admin'){
   if(request.method!=='GET')return json({error:'Method not allowed'},405);
   const file=await githubContent(token),source=Buffer.from(file.content,'base64').toString('utf8');
-  const js=await readFile(new URL('../private/studio.js',import.meta.url),'utf8');
-  const css=await readFile(new URL('../private/studio.css',import.meta.url),'utf8');
+  const {js,css}=loadStudio?await loadStudio():{js:await readFile(new URL('../private/studio.js',import.meta.url),'utf8'),css:await readFile(new URL('../private/studio.css',import.meta.url),'utf8')};
   const extra=`<script id="public-template" type="application/json">${JSON.stringify(source).replace(/</g,'\\u003c')}</script><style>${css}</style><script>${js}</script>`;
   return reply(source.replace('</body>',extra+'</body>'));
  }
@@ -91,3 +90,4 @@ export default async function handler(req,res){
   res.end(Buffer.from(await response.arrayBuffer()));
  }catch(error){console.error('Dashboard request failed:',error.status||'internal');res.statusCode=error.status||500;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({error:error.status?error.message:'The dashboard could not complete the request. Your draft is safe.'}));}
 }
+
