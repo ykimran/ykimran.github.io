@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<title>Choose your dashboard | Imran Yakub</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1115;--card:#101a1b;--ink:#edf2ed;--muted:#a4b5aa;--line:#27332f;--accent:#bce5aa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,sans-serif;min-height:100svh;display:grid;place-items:center}main{width:min(680px,100%);padding:48px 24px}.eyebrow{font:11px monospace;letter-spacing:2px;color:var(--accent)}h1{font-size:clamp(32px,7vw,48px);line-height:1.12;letter-spacing:-.04em;margin:18px 0}p{color:var(--muted);margin:0 0 28px}.hosts{display:grid;grid-template-columns:1fr 1fr;gap:16px}.host{display:block;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:16px;color:inherit;text-decoration:none;font:inherit;text-align:left;transition:border-color .2s,transform .2s}.host strong{display:block;font-size:21px;font-weight:600}.host span{display:block;color:var(--muted);font-size:14px;margin-top:8px}.host small{display:block;color:var(--accent);margin-top:24px}.host:disabled{opacity:.6;cursor:default}.host:focus-visible,.back:focus-visible{outline:2px solid var(--accent);outline-offset:5px}@media(hover:hover){a.host:hover{border-color:var(--accent);transform:translateY(-3px)}}.back{display:inline-block;color:var(--accent);margin-top:28px;text-underline-offset:4px}#host-status{font-size:13px;margin-top:18px;margin-bottom:0}@media(max-width:480px){.hosts{grid-template-columns:1fr}.host{padding:20px}.host small{margin-top:12px}}@media(prefers-reduced-motion:reduce){.host{transition:none;transform:none!important}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">YK / CONTENT STUDIO</div>
+<h1>Choose your dashboard.</h1>
+<p>Both dashboards edit the same portfolio. Use whichever is available.</p>
+<div class="hosts">
+<a class="host" id="vercel-host" href="https://ykimran-portfolio-admin.vercel.app/admin"><strong>Vercel</strong><span>Sign in with GitHub to edit your portfolio.</span><small>Open dashboard ↗</small></a>
+<button class="host" id="cloudflare-pending" disabled><strong>Cloudflare</strong><span>Waiting for account setup.</span><small>Not connected yet</small></button>
+</div>
+<p id="host-status" role="status" aria-live="polite"></p>
+<a class="back" href="/">Back to portfolio</a>
+</main><script>
+(()=>{
+const validURL=value=>{try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:null;}catch{return null;}};
+fetch('./hosts.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Unavailable');return r.json();}).then(hosts=>{
+ const vercel=validURL(hosts.vercel);if(vercel)document.getElementById('vercel-host').href=vercel;
+ const cloudflare=validURL(hosts.cloudflare);if(!cloudflare)return;
+ const a=document.createElement('a');a.className='host';a.href=cloudflare;
+ const strong=document.createElement('strong');strong.textContent='Cloudflare';
+ const span=document.createElement('span');span.textContent='Sign in with GitHub to edit your portfolio.';
+ const small=document.createElement('small');small.textContent='Open dashboard ↗';a.append(strong,span,small);
+ document.getElementById('cloudflare-pending').replaceWith(a);
+}).catch(()=>{document.getElementById('host-status').textContent='Could not load the dashboard list. The Vercel link is still available.';});
+})();
+</script></body></html>
