@@ -164,3 +164,11 @@ body{font-family:var(--body-font,"Plus Jakarta Sans",sans-serif);line-height:1.8
  .studio-status{max-width:none}
 }
 @media(max-width:650px){.studio .pair{grid-template-columns:1fr;gap:0}.studio-bar{padding:10px 16px}.studio-panel{padding:16px}}
+
+/* Compact publishing confirmation overlays the editor without moving its contents. */
+.studio .publish-panel{position:fixed;inset:auto auto max(20px,env(safe-area-inset-bottom)) 50%;transform:translateX(-50%);z-index:10;width:max-content;max-width:calc(100% - 32px);margin:0;padding:10px 12px;display:flex;align-items:center;gap:24px;border-radius:12px;box-shadow:0 8px 32px #0005;background:var(--card)}
+.studio .publish-panel[hidden]{display:none}
+.studio .publish-panel h3{font-size:13px;line-height:1.5;margin:0;font-weight:600}
+.studio .publish-panel .studio-actions{flex-wrap:nowrap;flex-shrink:0;gap:8px}
+.studio .publish-panel button{padding:6px 12px;min-height:36px}
+@media(max-width:420px){.studio .publish-panel{gap:12px;max-width:calc(100% - 24px)}.studio .publish-panel h3{font-size:12px}.studio .publish-panel button{min-height:44px;padding-inline:10px}}
